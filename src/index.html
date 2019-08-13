@@ -19,9 +19,9 @@
     <div id="main">
       <div class="input-group form-row">
         <input class="form-control" placeholder="New task..." id="new-task-input">
-          <button id="add-task" class="btn btn-outline-secondary" type="button" onclick="addTask(event)">
-            Add
-          </button>
+        <button id="add-task" class="btn btn-outline-secondary" type="button" onclick="addTask(event)">
+          Add
+        </button>
       </div>
       <div id="tasks">
 
@@ -37,6 +37,13 @@
 
           <ul id="open-tasks-list">
           </ul>
+
+          <div id="remove-open" class="row">
+            <div class="form-group col-lg-10"></div>
+            <div class="col-md-2">
+              <button id="remove-open-button" class="btn btn-outline-secondary">Clear "Open" list</button>
+            </div>
+          </div>
         </div>
 
         <div id="done-tasks">
@@ -50,7 +57,14 @@
           </div>
 
           <ul id="done-tasks-list">
-         </ul>
+          </ul>
+
+          <div id="remove-done" class="row">
+            <div class="form-group col-lg-10"></div>
+            <div class="col-md-2">
+              <button id="remove-done-button" class="btn btn-outline-secondary">Clear "Done" list</button>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -65,7 +79,6 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
-   <!-- <script src="/src/index.js"></script>  -->
 </body>
 
 </html>

@@ -1,3 +1,5 @@
+import './style.css';
+
 class Sort {
   constructor(id, name, sortFunction) {
     this.id = id;
@@ -11,14 +13,13 @@ class Task {
     name = '',
     done = false,
     id = Math.random(1000000).toString(),
-    creationDate = new Date(),
     resolutionDate = null
   ) {
     this.name = name;
     this.done = done;
     this.id = id;
-    this.creationDate = new Date(creationDate);
-    this.resolutionDate = resolutionDate ? new Date(resolutionDate) : null;
+    this.creationDate = new Date();
+    this.resolutionDate = done ? new Date() : null;
   }
 
   changeStatus() {
@@ -125,11 +126,21 @@ function getTaskRepresentaion(task) {
     <div id="check-task" class="col-1">
       <input id="check-task-checkbox}" onchange="changeTaskStatus(${task.id})" type="checkbox" ${task.done ? 'checked' : ''} />
     </div>
-    <div id="task-${task.id}" class="col-10" ondblclick='updateTask(${task.id})'>
+    <div id="task-${task.id}" class="col-8" ondblclick='updateTask(${task.id})'>
       <p>${task.name}</p>
     </div>
+    <div id="task-time-${task.id}" class="col-2">
+      <div>
+        <div class='creation-date'>
+          ${task.creationDate.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+        </div>
+        <div ${task.done ? '' : 'hidden=true'}'>
+          ${task.resolutionDate ? task.resolutionDate.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }) : ''}
+          </div>
+      </div>
+    </div>
     <div id="remove-task" class="col-1">
-      <button id="delete-task" onclick='removeTask(${task.id})'> <i class="fa fa-trash"></i></button>
+      <button id="delete-task" class="btn btn-outline-secondary" onclick='removeTask(${task.id})'> <i class="fa fa-trash"></i></button>
     </div>
   </div>
 </li>
@@ -200,6 +211,8 @@ function prefillTasks() {
   doneSort = sortDoneOptions[0].id
 }
 
+window.prefillTasks = prefillTasks;
+
 prefillTasks();
 renderSortings();
 renderTasks(tasks);
@@ -224,3 +237,13 @@ document.onkeydown = event => {
     }
   }
 }
+
+document.querySelector('#remove-open-button').addEventListener('mousedown', event => {
+  tasks = tasks.filter(task => task.done === true);
+  renderTasks(tasks);
+})
+
+document.querySelector('#remove-done-button').addEventListener('mousedown', event => {
+  tasks = tasks.filter(task => task.done !== true);
+  renderTasks(tasks);
+})

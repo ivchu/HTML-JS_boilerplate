@@ -1,3 +1,7 @@
-div {
-  color: blue;
+#header {
+  color: white;
+}
+
+.creation-date {
+  color: gray;
 }

@@ -9,17 +9,19 @@ class Sort {
 }
 
 class Task {
-  constructor(
+  constructor({
     name = '',
     done = false,
     id = Math.random(1000000).toString(),
+    creationDate = new Date(),
     resolutionDate = null
+  }
   ) {
     this.name = name;
     this.done = done;
     this.id = id;
-    this.creationDate = new Date();
-    this.resolutionDate = done ? new Date() : null;
+    this.creationDate = new Date(creationDate);
+    this.resolutionDate = resolutionDate ? new Date(resolutionDate) : null;
   }
 
   changeStatus() {
@@ -41,14 +43,14 @@ class Task {
 let sortOpenOptions = [
   new Sort('openNameAsc', 'Text (asc)', (a, b) => a.name.localeCompare(b.name)),
   new Sort('openNameDesc', 'Text (desc)', (a, b) => b.name.localeCompare(a.name)),
-  new Sort('opneDateAsc', 'Creation date (asc)', (a, b) => a.creationDate - b.creationDate),
-  new Sort('opneDateDesc', 'Creation date (desc)', (a, b) => b.creationDate - a.creationDate)
+  new Sort('openDateAsc', 'Creation date (asc)', (a, b) => a.creationDate - b.creationDate),
+  new Sort('openDateDesc', 'Creation date (desc)', (a, b) => b.creationDate - a.creationDate)
 ];
 let sortDoneOptions = [
-  new Sort('openNameAsc', 'Text (asc)', (a, b) => a.name.localeCompare(b.name)),
-  new Sort('openNameDesc', 'Text (desc)', (a, b) => b.name.localeCompare(a.name)),
-  new Sort('opneDateAsc', 'Resolution date (asc)', (a, b) => a.resolutionDate - b.resolutionDate),
-  new Sort('opneDateDesc', 'Resolution date (desc)', (a, b) => b.resolutionDate - a.resolutionDate)
+  new Sort('doneNameAsc', 'Text (asc)', (a, b) => a.name.localeCompare(b.name)),
+  new Sort('doneNameDesc', 'Text (desc)', (a, b) => b.name.localeCompare(a.name)),
+  new Sort('doneDateAsc', 'Resolution date (asc)', (a, b) => a.resolutionDate - b.resolutionDate),
+  new Sort('doneDateDesc', 'Resolution date (desc)', (a, b) => b.resolutionDate - a.resolutionDate)
 ];
 
 let tasks = [];
@@ -62,13 +64,15 @@ function addTask(event) {
 window.addTask = addTask;
 
 function createTask(input) {
-  tasks.push(new Task(input.value));
+  tasks.push(new Task({name: input.value}));
   input.value = '';
+  persistTasksToStorage();
   renderTasks(tasks);
 }
 
 function removeTask(id) {
   tasks.splice(tasks.indexOf(tasks.find(task => task.id === '' + id)), 1);
+  persistTasksToStorage();
   renderTasks(tasks);
 }
 window.removeTask = removeTask;
@@ -83,16 +87,14 @@ function updateTask(id) {
       // How to delete this ?
       // input.removeEventListener('keypress');
       tasks.find(task => task.id === '' + id).changeTask(event.target.value);
-      const p = document.createElement('p');
-      p.innerHTML = event.target.value;
-      listdiv.innerHTML = '';
-      listdiv.appendChild(p);
+      persistTasksToStorage();
+      renderTasks(tasks);
     }
   });
   const listdiv = document.getElementById(`task-${id}`);
   listdiv.innerHTML = '';
   listdiv.appendChild(input);
-  
+
 }
 window.updateTask = updateTask;
 
@@ -103,6 +105,7 @@ function search(text) {
 function selectOpenSort() {
   const openSortSelector = document.getElementById('open-tasks-sort');
   openSort = openSortSelector.value;
+  persistOpenSortToStorage();
   renderTasks(tasks);
 }
 window.selectOpenSort = selectOpenSort;
@@ -110,12 +113,16 @@ window.selectOpenSort = selectOpenSort;
 function selectDoneSort() {
   const doneSortSelector = document.getElementById('done-tasks-sort');
   doneSort = doneSortSelector.value;
+  persistDoneSortToStorage();
   renderTasks(tasks);
 }
 window.selectDoneSort = selectDoneSort;
 
 function changeTaskStatus(id) {
-  tasks.find(task => task.id === '' + id).changeStatus();
+  tasks.find(task => {
+    return task.id === '' + id;
+  }).changeStatus();
+  persistTasksToStorage();
   renderTasks(tasks);
 }
 window.changeTaskStatus = changeTaskStatus;
@@ -162,58 +169,49 @@ function renderTasks(renderTasks) {
     .map(task => getTaskRepresentaion(task))
     .join('');
 }
-let i = 0;
-
 
 function renderSortings() {
   const openSortings = document.getElementById('open-tasks-sort');
   const doneSortings = document.getElementById('done-tasks-sort');
 
-  fillSortings(openSortings, sortOpenOptions);
-  fillSortings(doneSortings, sortDoneOptions);
+  fillSortings(openSortings, sortOpenOptions, openSort);
+  fillSortings(doneSortings, sortDoneOptions, doneSort);
 }
 
-function fillSortings(selector, sortingOptions) {
-  sortingOptions.forEach(sort => {
+function fillSortings(selector, sortingOptions, predefinedSort) {
+  sortingOptions.forEach((sort, index) => {
     const element = document.createElement('option');
     element.text = sort.name;
-    if (sort.id === selector.value) {
-      element.setAttribute('selected', 'selected');
-    }
     element.value = sort.id;
     selector.add(element);
+    if (sort.id === predefinedSort) {
+      selector[index].selected = true;
+    }
   });
-
 }
 
-function persistToStorage() {
+function persistTasksToStorage() {
   window.localStorage.setItem('tasks', JSON.stringify(tasks));
+};
+
+function persistOpenSortToStorage() {
+  window.localStorage.setItem('openSort', openSort);
+};
+
+function persistDoneSortToStorage() {
+  window.localStorage.setItem('doneSort', doneSort);
 };
 
 function loadFromStorage() {
   const tasksJson = window.localStorage.getItem('tasks');
-  openSort = window.localStorage.getItem('openSort');
-  doneSort = window.localStorage.getItem('doneSort');
-
-  if (data) {
-    tasks = JSON.parse(tasksJson);
+  openSort = window.localStorage.getItem('openSort') || sortOpenOptions[0].id;
+  doneSort = window.localStorage.getItem('doneSort') || sortDoneOptions[0].id;
+  if (tasksJson) {
+    tasks = JSON.parse(tasksJson).map(obj => new Task(obj));
   }
 };
 
-function prefillTasks() {
-  tasks.push(new Task('123213123'));
-  tasks.push(new Task('123213123'));
-  tasks.push(new Task('123213122131233'));
-  tasks.push(new Task('DONE123213123', true));
-  tasks.push(new Task('DONE123213123', true));
-  tasks.push(new Task('DONE123213122131233', true));
-  openSort = sortOpenOptions[0].id
-  doneSort = sortDoneOptions[0].id
-}
-
-window.prefillTasks = prefillTasks;
-
-prefillTasks();
+loadFromStorage();
 renderSortings();
 renderTasks(tasks);
 
@@ -240,10 +238,12 @@ document.onkeydown = event => {
 
 document.querySelector('#remove-open-button').addEventListener('mousedown', event => {
   tasks = tasks.filter(task => task.done === true);
+  persistTasksToStorage();
   renderTasks(tasks);
 })
 
 document.querySelector('#remove-done-button').addEventListener('mousedown', event => {
   tasks = tasks.filter(task => task.done !== true);
+  persistTasksToStorage();
   renderTasks(tasks);
 })
